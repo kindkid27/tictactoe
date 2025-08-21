@@ -1,50 +1,75 @@
-console.log('fuck you');
 
-function SetTheBoard() {
+let board = [
+    ['', '', ''],
+    ['', '', ''],
+    ['', '', '']
+];
+let current = Math.random() < 0.5 ? 'X' : 'O';
+let gameOver = false;
 
-    
-    // get the canvas object
-    const canvas = document.getElementById("canvas");
+function drawBoard() {
+    const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
-    
-    
-    // ┌──────────────┐
-    // │ Side To Side │
-    // └──────────────┘
-    // the width is 500. Let's make the padding 50, that's 460 that we can work with. We need to divide it into thirds, so 460/3, 153 1/3
-    ctx.fillRect(155, 50, 20, 400);
-    ctx.fillRect(305, 50, 20, 400);
-
-    // ┌──────────────────┐
-    // │ Height To Height │
-    // └──────────────────┘
-    // the height is also 500. use the same shit as above
-    ctx.fillRect(50, 155, 400, 20);
-    ctx.fillRect(50, 305, 400, 20);
-};
-
-function SetHeader(whatwesettin) {
-    ctx = document.getElementById("shithead");
-
-    ctx.innerHTML = `${whatwesettin} meow`
-};
-
-function ChooseFirstPlayer() {
-    // we'll use math.random or something
-    const random = Math.random();
-    
-    var player = (Math.round(random) + 1);
-    switch (player) {
-        case 1:
-            player = "X";
-        case 2: 
-            player = "O";
-    };
-    
-    console.log(`THE COUNCIL HAS DECIDED: PLAYER ${player} WILL PLAY`);
-    return player;
+    ctx.clearRect(0, 0, 500, 500);
+    ctx.lineWidth = 5;
+    for (let i = 1; i < 3; i++) {
+        ctx.beginPath();
+        ctx.moveTo(i * 166, 0);
+        ctx.lineTo(i * 166, 500);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(0, i * 166);
+        ctx.lineTo(500, i * 166);
+        ctx.stroke();
+    }
+    for (let r = 0; r < 3; r++) {
+        for (let c = 0; c < 3; c++) {
+            if (board[r][c]) {
+                ctx.font = '100px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(board[r][c], c * 166 + 83, r * 166 + 83);
+            }
+        }
+    }
 }
 
-// page loaded
-SetTheBoard();
-SetHeader(ChooseFirstPlayer());
+function setHeader(text) {
+    document.getElementById('shithead').innerText = text;
+}
+
+function checkWin() {
+    for (let i = 0; i < 3; i++) {
+        if (board[i][0] && board[i][0] === board[i][1] && board[i][1] === board[i][2]) return board[i][0];
+        if (board[0][i] && board[0][i] === board[1][i] && board[1][i] === board[2][i]) return board[0][i];
+    }
+    if (board[0][0] && board[0][0] === board[1][1] && board[1][1] === board[2][2]) return board[0][0];
+    if (board[0][2] && board[0][2] === board[1][1] && board[1][1] === board[2][0]) return board[0][2];
+    if (board.flat().every(x => x)) return 'T';
+    return null;
+}
+
+function handleClick(e) {
+    if (gameOver) return;
+    const rect = e.target.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const row = Math.floor(y / 166.66);
+    const col = Math.floor(x / 166.66);
+    if (board[row][col]) return;
+    board[row][col] = current;
+    drawBoard();
+    let winner = checkWin();
+    if (winner) {
+        gameOver = true;
+        if (winner === 'T') setHeader('Tie');
+        else setHeader(winner + ' wins');
+    } else {
+        current = current === 'X' ? 'O' : 'X';
+        setHeader(current + "'s turn");
+    }
+}
+
+document.getElementById('canvas').addEventListener('click', handleClick);
+drawBoard();
+setHeader(current + "'s turn");
